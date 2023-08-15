@@ -22,7 +22,7 @@ pub fn build_query(
     timestamp: String,
     data: Option<&str>,
     query_parameters: Option<QueryParameters>,
-) -> String {
+) -> Option<String> {
     let body_md5: String;
 
     let mut query_pairs: Vec<(&str, &str)> = vec![
@@ -61,7 +61,7 @@ pub fn build_query(
     }
 
     let to_sign = format!("{}\n{}\n{}", method, path, query_string_to_sign);
-    let auth_signature = create_auth_signature(&to_sign, &secret);
+    let auth_signature = create_auth_signature(&to_sign, &secret)?;
 
     let query_buffer = String::new();
     let mut query_serializer = Serializer::new(query_buffer);
@@ -71,7 +71,7 @@ pub fn build_query(
     }
     query_serializer.append_pair("auth_signature", auth_signature.as_str());
 
-    return query_serializer.finish();
+    Some(query_serializer.finish())
 }
 
 #[test]

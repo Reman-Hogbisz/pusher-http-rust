@@ -339,7 +339,7 @@ impl<C: Connect + Clone + Send + Sync + 'static> Pusher<C> {
         }
 
         let method = "POST";
-        let query = build_query(
+        let query = match build_query(
             method,
             request_url.path(),
             &self.key,
@@ -347,7 +347,10 @@ impl<C: Connect + Clone + Send + Sync + 'static> Pusher<C> {
             timestamp(),
             Some(&body),
             None,
-        );
+        ) {
+            Some(query) => query,
+            None => return Err("Failed to build query".to_string()),
+        };
         request_url.set_query(Some(&query));
         send_request::<C, TriggeredEvents>(&self.http_client, method, request_url, Some(body)).await
     }
@@ -406,7 +409,7 @@ impl<C: Connect + Clone + Send + Sync + 'static> Pusher<C> {
         );
         let mut request_url = Url::parse(&request_url_string).unwrap();
         let method = "GET";
-        let query = build_query(
+        let query = match build_query(
             method,
             request_url.path(),
             &self.key,
@@ -414,7 +417,10 @@ impl<C: Connect + Clone + Send + Sync + 'static> Pusher<C> {
             timestamp(),
             None,
             params,
-        );
+        ) {
+            Some(query) => query,
+            None => return Err("Failed to build query".to_string()),
+        };
         request_url.set_query(Some(&query));
         send_request::<C, ChannelList>(&self.http_client, method, request_url, None).await
     }
@@ -486,7 +492,7 @@ impl<C: Connect + Clone + Send + Sync + 'static> Pusher<C> {
         );
         let mut request_url = Url::parse(&request_url_string).unwrap();
         let method = "GET";
-        let query = build_query(
+        let query = match build_query(
             method,
             request_url.path(),
             &self.key,
@@ -494,7 +500,10 @@ impl<C: Connect + Clone + Send + Sync + 'static> Pusher<C> {
             timestamp(),
             None,
             params,
-        );
+        ) {
+            Some(q) => q,
+            None => return Err("Failed to build query".to_string()),
+        };
         request_url.set_query(Some(&query));
         send_request::<C, Channel>(&self.http_client, method, request_url, None).await
     }
@@ -522,7 +531,7 @@ impl<C: Connect + Clone + Send + Sync + 'static> Pusher<C> {
         );
         let mut request_url = Url::parse(&request_url_string).unwrap();
         let method = "GET";
-        let query = build_query(
+        let query = match build_query(
             method,
             request_url.path(),
             &self.key,
@@ -530,7 +539,10 @@ impl<C: Connect + Clone + Send + Sync + 'static> Pusher<C> {
             timestamp(),
             None,
             None,
-        );
+        ) {
+            Some(q) => q,
+            None => return Err("Failed to build query".to_string()),
+        };
         request_url.set_query(Some(&query));
         send_request::<C, ChannelUserList>(&self.http_client, method, request_url, None).await
     }
@@ -624,7 +636,10 @@ impl<C: Connect + Clone + Send + Sync + 'static> Pusher<C> {
             auth_map.insert("channel_data", json_member);
         }
 
-        create_channel_auth(&mut auth_map, &self.key, &self.secret, &to_sign);
+        match create_channel_auth(&mut auth_map, &self.key, &self.secret, &to_sign) {
+            Some(_) => (),
+            None => return Err("Failed to create channel auth"),
+        };
         Ok(serde_json::to_string(&auth_map).unwrap())
     }
 

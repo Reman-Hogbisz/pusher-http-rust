@@ -17,3 +17,13 @@ pub fn validate_channels(channels: &Vec<String>) -> Result<bool, String> {
     }
     Ok(true)
 }
+
+#[macro_export]
+macro_rules! unwrap_or_return {
+    ($e:expr) => {
+        match $e {
+            Ok(v) => v,
+            Err(e) => return Err(format!("Error: {e}")),
+        }
+    };
+}
